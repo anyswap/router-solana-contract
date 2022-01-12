@@ -1,0 +1,12 @@
+[programs.localnet]
+router = "5F3j1TvB7CQa4XRFN48iAd8y2ZgXXzUTVMJvtFXvF4N"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "mocha -t 1000000 tests/"
