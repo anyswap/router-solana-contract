@@ -1,5 +1,5 @@
 [programs.localnet]
-router = "5F3j1TvB7CQa4XRFN48iAd8y2ZgXXzUTVMJvtFXvF4N"
+router = "xHYaTHecBATkMWMg2MVt5hcwQExHZhNpHFP1Zh5mZRb"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -9,4 +9,5 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "mocha -t 1000000 tests/"
+# test = "mocha -t 1000000 tests/"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/"

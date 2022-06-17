@@ -18,7 +18,7 @@ var printTx = async (tx) => {
 describe("router", () => {
   /* create and set a Provider */
   //const provider = anchor.Provider.local("http://localhost:8899", {"commitment":"finalized"});
-  const provider = anchor.Provider.env();
+  const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.Router;
   connection = provider.connection;
