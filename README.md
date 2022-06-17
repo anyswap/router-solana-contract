@@ -50,6 +50,8 @@ anchor --version
 
 ```shell
 npm install -g yarn
+
+yarn install
 ```
 
 * solana config
