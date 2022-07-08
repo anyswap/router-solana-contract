@@ -75,14 +75,14 @@ program.command('swapout-burn')
         console.log('solana wallet', process.env.ANCHOR_WALLET);
         console.log("options", this.opts())
 
-        _routerAccount = new PublicKey(options.args[3])
-        _tempMintA = new PublicKey(options.args[4])
-        _fromATA = new PublicKey(options.args[5])
+        _routerAccount = new PublicKey(this.opts().owner)
+        _tempMintA = new PublicKey(this.opts().token)
+        _fromATA = new PublicKey(this.opts().from)
         init().then(async () => {
             const tx = await router_program.rpc.swapoutBurn(
-                options.args[0],
-                new anchor.BN(options.args[1]),
-                new anchor.BN(options.args[2]), {
+                this.opts().to,
+                new anchor.BN(this.opts().amount),
+                new anchor.BN(this.opts().chainid), {
                 accounts: {
                     signer: mywallet.publicKey,
                     routerAccount: _routerAccount,

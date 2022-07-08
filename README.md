@@ -144,3 +144,10 @@ anchor test
 ```shell
 anchor deploy
 ```
+
+
+## Tools
+use tools to swapin and mint token
+```shell
+node app/client.js -h
+```
