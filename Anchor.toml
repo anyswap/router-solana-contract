@@ -1,5 +1,6 @@
 [programs.localnet]
-router = "xHYaTHecBATkMWMg2MVt5hcwQExHZhNpHFP1Zh5mZRb"
+router = "BCNbjzvjVMh1frrB33VVfvCAGF611cswYjvo3zsdMNLq"
+# router = "xHYaTHecBATkMWMg2MVt5hcwQExHZhNpHFP1Zh5mZRb"
 
 [registry]
 url = "https://anchor.projectserum.com"

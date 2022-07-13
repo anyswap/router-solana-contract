@@ -8,11 +8,11 @@ const { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, Token } = spl;
 
 var connection;
 var printTx = async (tx) => {
-    await connection.confirmTransaction(tx)
-    let txresult = await connection.getParsedConfirmedTransaction(tx, "confirmed");
-    console.log("tx result is")
-    //console.log(JSON.stringify(txresult, null, 4));
-    console.log(util.inspect(txresult, {showHidden: false, depth: null, colors: true}));
+  await connection.confirmTransaction(tx)
+  let txresult = await connection.getParsedConfirmedTransaction(tx, "confirmed");
+  console.log("tx result is")
+  //console.log(JSON.stringify(txresult, null, 4));
+  console.log(util.inspect(txresult, { showHidden: false, depth: null, colors: true }));
 }
 
 describe("router", () => {
@@ -34,11 +34,11 @@ describe("router", () => {
 
   let _routerAccount, _bump;
   PublicKey.findProgramAddress([Buffer.from('Router')], programId)
-  .then(([pdaAccount, bump]) => {
-    _routerAccount = pdaAccount;
-    _bump = bump;
-    console.log("router account is", _routerAccount.toString(), "bump seed is", _bump);
-  });
+    .then(([pdaAccount, bump]) => {
+      _routerAccount = pdaAccount;
+      _bump = bump;
+      console.log("router account is", _routerAccount.toString(), "bump seed is", _bump);
+    });
 
   const _tempAccount = Keypair.generate();
   console.log("temp account is", _tempAccount.publicKey.toString());
@@ -46,17 +46,17 @@ describe("router", () => {
   it('Prepare balance by airdrop!', async () => {
     // Airdropping tokens to _tempAccount.
     await connection.confirmTransaction(
-      await connection.requestAirdrop(_tempAccount.publicKey, 100*LAMPORTS_PER_SOL),
+      await connection.requestAirdrop(_tempAccount.publicKey, 100 * LAMPORTS_PER_SOL),
       "confirmed"
     );
     // Airdropping tokens to _routerAccount.
     await connection.confirmTransaction(
-      await connection.requestAirdrop(_routerAccount, 100*LAMPORTS_PER_SOL),
+      await connection.requestAirdrop(_routerAccount, 100 * LAMPORTS_PER_SOL),
       "confirmed"
     );
     // Airdropping tokens to mpc.
     await connection.confirmTransaction(
-      await connection.requestAirdrop(mpc, 100*LAMPORTS_PER_SOL),
+      await connection.requestAirdrop(mpc, 100 * LAMPORTS_PER_SOL),
       "confirmed"
     );
 
@@ -94,7 +94,7 @@ describe("router", () => {
   });
 
   it('Change MPC!', async () => {
-    const tx = await program.rpc.changeMpc(mywallet.publicKey, {
+    let tx = await program.rpc.changeMpc(mywallet.publicKey, {
       accounts: {
         mpc: _tempAccount.publicKey,
         routerAccount: _routerAccount,
@@ -105,10 +105,44 @@ describe("router", () => {
     console.log("change mpc tx is", tx);
     await printTx(tx);
 
+    tx = await program.rpc.applyMpc(mywallet.publicKey, {
+      accounts: {
+        mpc: _tempAccount.publicKey,
+        routerAccount: _routerAccount,
+        newMpc: mywallet.publicKey,
+      },
+      signers: [_tempAccount],
+    });
+    console.log("apply mpc tx is", tx);
+    await printTx(tx);
+
     /* Fetch the account and check the value of count */
     const account = await program.account.routerAccount.fetch(_routerAccount);
     console.log('pda mpc key: ', account.mpc.toString());
     assert.ok(account.mpc.equals(mywallet.publicKey));
+  });
+
+  it('ENABLE SWAP TRADE!', async () => {
+    let tx = await program.rpc.enableSwapTrade(false, {
+      accounts: {
+        mpc: mywallet.publicKey,
+        routerAccount: _routerAccount,
+      },
+      signers: [mywallet.payer],
+    });
+    console.log("disable_swap_trade tx is", tx);
+    await printTx(tx);
+
+
+    tx = await program.rpc.enableSwapTrade(true, {
+      accounts: {
+        mpc: mywallet.publicKey,
+        routerAccount: _routerAccount,
+      },
+      signers: [mywallet.payer],
+    });
+    console.log("enable_swap_trade tx is", tx);
+    await printTx(tx);
   });
 
   it('Skim lamports!', async () => {
@@ -277,7 +311,7 @@ describe("router", () => {
     let swapinTx = "0xcce8e16a5b685b7713436b4adf4ffd66bd0387d8be5b423b7772990b469e4851";
     const tx = await program.rpc.swapinNative(
       swapinTx,
-      new anchor.BN(2*LAMPORTS_PER_SOL),
+      new anchor.BN(2 * LAMPORTS_PER_SOL),
       new anchor.BN(555), {
       accounts: {
         mpc: mywallet.publicKey,
@@ -296,7 +330,7 @@ describe("router", () => {
     balance = await connection.getBalance(_tempAccount.publicKey);
     console.log("after: temp account account balance is", balance);
 
-    assert.ok(balance == prebalance + 2*LAMPORTS_PER_SOL);
+    assert.ok(balance == prebalance + 2 * LAMPORTS_PER_SOL);
   });
 
   it('Swapout burn!', async () => {
