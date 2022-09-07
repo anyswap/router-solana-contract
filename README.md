@@ -33,7 +33,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 * install solana
 
 ```shell
-sh -c "$(curl -sSfL https://release.solana.com/v1.8.5/install)"
+sh -c "$(curl -sSfL https://release.solana.com/v1.11.10/install)"
 
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 ```
@@ -77,16 +77,18 @@ run a local ledger for development and testing.
 ```shell
 # Check you can run a local validator (Run Ctrl+C to exit).
 # Note this creates a "test-ledger" folder in your current directory.
-solana-test-validator
+sudo solana-test-validator
 
 # Or, run a new empty local ledger.
-solana-test-validator --reset
+sudo solana-test-validator --reset
 ```
 
 ## First Time Build
 
+cd router-solana-contract
+
 ```shell
-anchor build
+sudo anchor build
 ```
 
 Once our code was compiled, the `target` folder was updated accordingly.
@@ -130,19 +132,19 @@ declare_id!("5F3j1TvB7CQa4XRFN48iAd8y2ZgXXzUTVMJvtFXvF4N");
 ## Build
 
 ```shell
-anchor build
+sudo anchor build
 ```
 
 ## Test
 
 ```shell
-anchor test
+sudo anchor test --skip-local-validator
 ```
 
 ## Deploy
 
 ```shell
-anchor deploy
+sudo anchor deploy
 ```
 
 
