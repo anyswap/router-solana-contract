@@ -33,6 +33,26 @@ async function init() {
 
 program.version('0.0.1');
 
+program.command('airdrop')
+    .requiredOption('-m --mpc <mpc>', 'mpc address')
+    .action(function () {
+        console.log("options", this.opts())
+        console.log('solana node', process.env.ANCHOR_PROVIDER_URL);
+        console.log('solana wallet', process.env.ANCHOR_WALLET);
+        init().then(async () => {
+            let mpc = new PublicKey(this.opts().mpc)
+            const airdropSignature = await connection.requestAirdrop(
+                mpc,
+                LAMPORTS_PER_SOL
+            );
+            await connection.confirmTransaction(airdropSignature);
+        });
+    }).on('--help', function () {
+        console.log('Examples:');
+        console.log();
+        console.log('ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=/Users/potti/.config/solana/id.json node app/client.js airdrop -m 3Vy2dgYZ4xMig6snrs7PgWcQeGXcTatEyhEJSBjkgUKD');
+    });
+
 program.command('init')
     .requiredOption('-m --mpc <mpc>', 'mpc address')
     .action(function () {
