@@ -67,7 +67,7 @@ program.command('init')
                 .then(async ([pdaAccount, bump]) => {
                     _routerAccount = pdaAccount;
                     _bump = bump;
-                    console.log( "router account is", _routerAccount.toString(), "bump seed is", _bump);
+                    console.log("router account is", _routerAccount.toString(), "bump seed is", _bump);
 
                     const tx = await router_program.rpc.initialize(_bump, {
                         accounts: {
@@ -243,29 +243,34 @@ program.command('mint')
             _toATA = new PublicKey(this.opts().to)
             const token = new Token(connection, _tempMintA, TOKEN_PROGRAM_ID, mywallet.payer);
             if ('false' == this.opts().flag) {
+                try {
+                    _createToATA = await token.createAssociatedTokenAccount(new PublicKey(this.opts().to));
+                    console.log("_createToATA", _createToATA.toString())
+                } catch (error) {
+                }
                 _toATA = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, _tempMintA, _toATA, true);
             }
             console.log('toATA', _toATA.toString())
-            await token.mintTo(
-                _toATA,
-                _owner,
-                [mywallet.payer],
-                this.opts().amount
-            )
-            // const transaction = new Transaction();
-            // let memo = new TransactionInstruction({
-            //     keys: [{
-            //         pubkey: mywallet.publicKey,
-            //         isSigner: true,
-            //         isWritable: true
-            //     }],
-            //     programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-            //     data: Buffer.from("mint " + this.opts().amount + " to " + _toATA.toString()),
-            // })
-            // let minto = Token.createMintToInstruction(TOKEN_PROGRAM_ID, _tempMintA, _toATA, _owner, [mywallet.payer], this.opts().amount);
-            // transaction.add(minto).add(memo)
-            // let tx = await connection.sendTransaction(transaction, [mywallet.payer])
-            // console.log("tx", tx)
+            // await token.mintTo(
+            //     _toATA,
+            //     _owner,
+            //     [mywallet.payer],
+            //     this.opts().amount
+            // )
+            const transaction = new Transaction();
+            let memo = new TransactionInstruction({
+                keys: [{
+                    pubkey: mywallet.publicKey,
+                    isSigner: true,
+                    isWritable: true
+                }],
+                programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+                data: Buffer.from("mint " + this.opts().amount + " to " + _toATA.toString()),
+            })
+            let minto = Token.createMintToInstruction(TOKEN_PROGRAM_ID, _tempMintA, _toATA, _owner, [mywallet.payer], this.opts().amount);
+            transaction.add(minto).add(memo)
+            let tx = await connection.sendTransaction(transaction, [mywallet.payer])
+            console.log("tx", tx)
 
             let tokenAmount = await connection.getTokenAccountBalance(_toATA);
             console.log("toATA balance is", tokenAmount);
