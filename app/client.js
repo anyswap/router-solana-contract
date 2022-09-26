@@ -67,7 +67,7 @@ program.command('init')
                 .then(async ([pdaAccount, bump]) => {
                     _routerAccount = pdaAccount;
                     _bump = bump;
-                    console.log("router account is", _routerAccount.toString(), "bump seed is", _bump);
+                    console.log( "router account is", _routerAccount.toString(), "bump seed is", _bump);
 
                     const tx = await router_program.rpc.initialize(_bump, {
                         accounts: {
@@ -246,26 +246,26 @@ program.command('mint')
                 _toATA = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, _tempMintA, _toATA, true);
             }
             console.log('toATA', _toATA.toString())
-            // await token.mintTo(
-            //     _toATA,
-            //     _owner,
-            //     [mywallet.payer],
-            //     this.opts().amount
-            // )
-            const transaction = new Transaction();
-            let memo = new TransactionInstruction({
-                keys: [{
-                    pubkey: mywallet.publicKey,
-                    isSigner: true,
-                    isWritable: true
-                }],
-                programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
-                data: Buffer.from("mint " + this.opts().amount + " to " + _toATA.toString()),
-            })
-            let minto = Token.createMintToInstruction(TOKEN_PROGRAM_ID, _tempMintA, _toATA, _owner, [mywallet.payer], this.opts().amount);
-            transaction.add(minto).add(memo)
-            let tx = await connection.sendTransaction(transaction, [mywallet.payer])
-            console.log("tx", tx)
+            await token.mintTo(
+                _toATA,
+                _owner,
+                [mywallet.payer],
+                this.opts().amount
+            )
+            // const transaction = new Transaction();
+            // let memo = new TransactionInstruction({
+            //     keys: [{
+            //         pubkey: mywallet.publicKey,
+            //         isSigner: true,
+            //         isWritable: true
+            //     }],
+            //     programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"),
+            //     data: Buffer.from("mint " + this.opts().amount + " to " + _toATA.toString()),
+            // })
+            // let minto = Token.createMintToInstruction(TOKEN_PROGRAM_ID, _tempMintA, _toATA, _owner, [mywallet.payer], this.opts().amount);
+            // transaction.add(minto).add(memo)
+            // let tx = await connection.sendTransaction(transaction, [mywallet.payer])
+            // console.log("tx", tx)
 
             let tokenAmount = await connection.getTokenAccountBalance(_toATA);
             console.log("toATA balance is", tokenAmount);
@@ -273,7 +273,7 @@ program.command('mint')
     }).on('--help', function () {
         console.log('Examples:');
         console.log();
-        console.log('ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=/Users/potti/.config/solana/id.json node app/client.js mint -token 5DTyXgAZ3T1fpRQFKSrD86MTVrjGVUS672xpUTU76rLt -owner 3gScJGwn2GKoi8xjNoSDP6pb9qsnNVAXciWSv7E8yUt5 -t EE3XrLpQSTQmpeVgWcioBqFvimfCATfLKWgR1ZxDiV3J -f false -a 10000000000');
+        console.log('ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=/Users/potti/.config/solana/id.json node app/client.js mint -token Fk34CvukAYauMFFD6epAYYKLLrN2XRXabnaBANhvJ4a1 -owner 3gScJGwn2GKoi8xjNoSDP6pb9qsnNVAXciWSv7E8yUt5 -t 3Vy2dgYZ4xMig6snrs7PgWcQeGXcTatEyhEJSBjkgUKD -f false -a 10000000000');
     });
 
 program.parse(process.argv);
