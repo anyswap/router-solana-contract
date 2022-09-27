@@ -88,7 +88,8 @@ sudo solana-test-validator --reset
 cd router-solana-contract
 
 ```shell
-sudo anchor build
+sudo anchor build  
+
 ```
 
 Once our code was compiled, the `target` folder was updated accordingly.
@@ -145,6 +146,8 @@ sudo anchor test --skip-local-validator
 
 ```shell
 sudo anchor deploy
+
+sudo anchor deploy  --provider.cluster https://api.testnet.solana.com/
 ```
 
 
