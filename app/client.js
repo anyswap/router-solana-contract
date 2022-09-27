@@ -6,6 +6,7 @@ const { SystemProgram, PublicKey, Keypair, Transaction, TransactionInstruction, 
 const spl = require("@solana/spl-token");
 const { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, Token } = spl;
 const { Command } = require('commander');
+
 const program = new Command();
 var router_program
 var connection
@@ -29,7 +30,12 @@ async function init() {
 
     mywallet = provider.wallet;
     console.log("my wallet is", mywallet.publicKey.toString());
+
+    // for front web3
+    idl = JSON.parse(fs.readFileSync("target/idl/router.json", "utf-8"));
+    router_program_from_idl = new anchor.Program(idl, router_program.programId.toBase58(), provider);
 }
+
 
 program.version('0.0.1');
 
