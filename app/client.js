@@ -287,6 +287,31 @@ program.command('mint')
         console.log('ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=/Users/potti/.config/solana/id.json node app/client.js mint -token Fk34CvukAYauMFFD6epAYYKLLrN2XRXabnaBANhvJ4a1 -owner 3gScJGwn2GKoi8xjNoSDP6pb9qsnNVAXciWSv7E8yUt5 -t 3Vy2dgYZ4xMig6snrs7PgWcQeGXcTatEyhEJSBjkgUKD -f false -a 10000000000');
     });
 
+program.command('createTokenATA')
+    .requiredOption('-token --token <programID>', 'token programID')
+    .requiredOption('-user --user <address>', 'user address')
+    .action(function () {
+        console.log('solana node', process.env.ANCHOR_PROVIDER_URL);
+        console.log('solana wallet', process.env.ANCHOR_WALLET);
+        console.log("options", this.opts())
+
+        init().then(async () => {
+            _tempMintA = new PublicKey(this.opts().token)
+            _user = new PublicKey(this.opts().user)
+            const token = new Token(connection, _tempMintA, TOKEN_PROGRAM_ID, mywallet.payer);
+            try {
+                _createToATA = await token.createAssociatedTokenAccount(new PublicKey(this.opts().to));
+                console.log("createTokenATA", _createToATA.toString())
+            } catch (error) {
+            }
+            _toATA = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, _tempMintA, _toATA, true);
+            console.log('getAndVerify', _toATA.toString())
+        });
+    }).on('--help', function () {
+        console.log('Examples:');
+        console.log();
+        console.log('ANCHOR_PROVIDER_URL=http://localhost:8899 ANCHOR_WALLET=/Users/potti/.config/solana/id.json node app/client.js createTokenATA -token Fk34CvukAYauMFFD6epAYYKLLrN2XRXabnaBANhvJ4a1 -user 3gScJGwn2GKoi8xjNoSDP6pb9qsnNVAXciWSv7E8yUt5');
+    });
 program.parse(process.argv);
 
 
