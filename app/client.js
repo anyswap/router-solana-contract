@@ -300,11 +300,11 @@ program.command('createTokenATA')
             _user = new PublicKey(this.opts().user)
             const token = new Token(connection, _tempMintA, TOKEN_PROGRAM_ID, mywallet.payer);
             try {
-                _createToATA = await token.createAssociatedTokenAccount(new PublicKey(this.opts().to));
+                _createToATA = await token.createAssociatedTokenAccount(_user);
                 console.log("createTokenATA", _createToATA.toString())
             } catch (error) {
             }
-            _toATA = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, _tempMintA, _toATA, true);
+            _toATA = await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, _tempMintA, _user, true);
             console.log('getAndVerify', _toATA.toString())
         });
     }).on('--help', function () {
