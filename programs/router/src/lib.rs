@@ -4,7 +4,7 @@ use anchor_lang::solana_program::{self, system_instruction};
 use anchor_spl::associated_token::{self, get_associated_token_address, AssociatedToken, Create};
 use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer};
 
-declare_id!("BCNbjzvjVMh1frrB33VVfvCAGF611cswYjvo3zsdMNLq");
+declare_id!("AM1Br5naLGnfYJmHeoC6PYnX2FYdDhwyPAkrgNt9gaQD");
 
 const ROUTER_PDA_SEEDS: &[u8] = b"Router";
 
@@ -46,6 +46,10 @@ pub mod router {
     pub fn apply_mpc(ctx: Context<ChangeMPC>, new: Pubkey) -> Result<()> {
         require!(
             ctx.accounts.router_account.pending_mpc == new,
+            RouterError::ApplyWrongAccount
+        );
+        require!(
+            new != Pubkey::zeroed(),
             RouterError::ApplyWrongAccount
         );
         let old_mpc = ctx.accounts.router_account.mpc;
