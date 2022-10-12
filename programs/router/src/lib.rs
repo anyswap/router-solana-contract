@@ -450,7 +450,7 @@ pub struct SkimLamports<'info> {
 pub struct EnableSwapTrade<'info> {
     #[account(mut)]
     pub mpc: Signer<'info>,
-    #[account(owner = *program_id, has_one = mpc @RouterError::OnlyMPC)]
+    #[account(mut, owner = *program_id, has_one = mpc @RouterError::OnlyMPC)]
     pub router_account: Account<'info, RouterAccount>,
 }
 

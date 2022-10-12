@@ -435,6 +435,66 @@ describe("router", () => {
     assert.ok(balance == prebalance + LAMPORTS_PER_SOL);
   });
 
+  it('DisableSwap!', async () => {
+    let tx = await program.rpc.enableSwapTrade(
+      false, {
+      accounts: {
+        mpc: mywallet.publicKey,
+        routerAccount: _routerAccount,
+      },
+      signers: [mywallet.payer],
+    });
+    console.log("enableSwapTrade tx is", tx);
+    await printTx(tx);
+
+    let bindAddr = "0xdce8e16a5b685b7713436b4adf4ffd66bd0387d8";
+    await program.rpc.swapoutNative(
+      bindAddr,
+      new anchor.BN(LAMPORTS_PER_SOL),
+      new anchor.BN(666), {
+      accounts: {
+        signer: _tempAccount.publicKey,
+        routerAccount: _routerAccount,
+        systemProgram: SystemProgram.programId,
+      },
+      signers: [_tempAccount],
+    }).catch((err) => {
+      console.log("Good! found swapout stop", err)
+    }).then((tx) => {
+      console.log("tx", tx)
+      assert.ok(!tx, "swapout stop")
+    });
+  });
+
+  it('EnableSwap!', async () => {
+    let tx = await program.rpc.enableSwapTrade(
+      true, {
+      accounts: {
+        mpc: mywallet.publicKey,
+        routerAccount: _routerAccount,
+      },
+      signers: [mywallet.payer],
+    });
+    console.log("enableSwapTrade tx is", tx);
+    await printTx(tx);
+
+    let bindAddr = "0xdce8e16a5b685b7713436b4adf4ffd66bd0387d8";
+    const swaptx = await program.rpc.swapoutNative(
+      bindAddr,
+      new anchor.BN(LAMPORTS_PER_SOL),
+      new anchor.BN(666), {
+      accounts: {
+        signer: _tempAccount.publicKey,
+        routerAccount: _routerAccount,
+        systemProgram: SystemProgram.programId,
+      },
+      signers: [_tempAccount],
+    });
+    console.log("swapoutNative tx is", swaptx);
+    await printTx(swaptx);
+
+  });
+
   it('Change MPC again!', async () => {
     const tx = await program.rpc.changeMpc(mpc, {
       accounts: {
