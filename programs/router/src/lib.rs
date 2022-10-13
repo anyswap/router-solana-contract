@@ -4,7 +4,7 @@ use anchor_lang::solana_program::{self, system_instruction};
 use anchor_spl::associated_token::{self, get_associated_token_address, AssociatedToken, Create};
 use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount, Transfer};
 
-declare_id!("AM1Br5naLGnfYJmHeoC6PYnX2FYdDhwyPAkrgNt9gaQD");
+declare_id!("5VdF7WLTrgxAS3cvKgsKZjeotmE6gStfikhkxp9fiYdR");
 
 const ROUTER_PDA_SEEDS: &[u8] = b"Router";
 
@@ -22,7 +22,7 @@ pub mod router {
 
         ctx.accounts.router_account.mpc = *ctx.accounts.mpc.key;
         ctx.accounts.router_account.bump = bump;
-        ctx.accounts.router_account.enable_swap_trade = true;
+        ctx.accounts.router_account.paused = false;
         ctx.accounts.router_account.pending_mpc = Pubkey::zeroed();
 
         Ok(())
@@ -43,13 +43,10 @@ pub mod router {
     }
 
     /// Change manage account of pda account `router_account`
-    pub fn apply_mpc(ctx: Context<ChangeMPC>, new: Pubkey) -> Result<()> {
+    pub fn apply_mpc(ctx: Context<ApplyMPC>) -> Result<()> {
+        let new = *ctx.accounts.signer.key;
         require!(
             ctx.accounts.router_account.pending_mpc == new,
-            RouterError::ApplyWrongAccount
-        );
-        require!(
-            new != Pubkey::zeroed(),
             RouterError::ApplyWrongAccount
         );
         let old_mpc = ctx.accounts.router_account.mpc;
@@ -64,12 +61,13 @@ pub mod router {
     }
 
     /// Pause this contract
-    pub fn enable_swap_trade(ctx: Context<EnableSwapTrade>, enable:bool) -> Result<()> {
-        ctx.accounts.router_account.enable_swap_trade = enable;
+    pub fn set_paused(ctx: Context<SetPaused>, enable:bool) -> Result<()> {
+        ctx.accounts.router_account.paused = enable;
         msg!(&format!(
-            "EnableSwapTrade now set to {}",
+            "set paused to {}",
             enable
         ));
+
         Ok(())
     }
 
@@ -82,7 +80,7 @@ pub mod router {
         from_chainid: u64,
     ) -> Result<()> {
         require!(
-            ctx.accounts.router_account.enable_swap_trade == true,
+            !ctx.accounts.router_account.paused,
             RouterError::HasBeenSuspended
         );
         let authority_seeds = &[&ROUTER_PDA_SEEDS[..], &[ctx.accounts.router_account.bump]];
@@ -110,7 +108,7 @@ pub mod router {
         from_chainid: u64,
     ) -> Result<()> {
         require!(
-            ctx.accounts.router_account.enable_swap_trade == true,
+            !ctx.accounts.router_account.paused,
             RouterError::HasBeenSuspended
         );
         let ata = get_associated_token_address(
@@ -146,7 +144,7 @@ pub mod router {
         from_chainid: u64,
     ) -> Result<()> {
         require!(
-            ctx.accounts.router_account.enable_swap_trade == true,
+            !ctx.accounts.router_account.paused,
             RouterError::HasBeenSuspended
         );
         let from = ctx.accounts.router_account.to_account_info();
@@ -171,7 +169,7 @@ pub mod router {
         to_chainid: u64,
     ) -> Result<()> {
         require!(
-            ctx.accounts.router_account.enable_swap_trade == true,
+            !ctx.accounts.router_account.paused,
             RouterError::HasBeenSuspended
         );
         let router_account = ctx.accounts.router_account.key();
@@ -198,7 +196,7 @@ pub mod router {
         to_chainid: u64,
     ) -> Result<()> {
         require!(
-            ctx.accounts.router_account.enable_swap_trade == true,
+            !ctx.accounts.router_account.paused,
             RouterError::HasBeenSuspended
         );
         let ata = get_associated_token_address(
@@ -227,7 +225,7 @@ pub mod router {
         to_chainid: u64,
     ) -> Result<()> {
         require!(
-            ctx.accounts.router_account.enable_swap_trade == true,
+            !ctx.accounts.router_account.paused,
             RouterError::HasBeenSuspended
         );
         let from = ctx.accounts.signer.to_account_info();
@@ -309,7 +307,7 @@ pub struct RouterAccount {
     pub mpc: Pubkey,//32
     pub bump: u8,//1
     pub pending_mpc: Pubkey,//32
-    pub enable_swap_trade: bool, //1
+    pub paused: bool, //1
 }
 
 #[derive(Accounts)]
@@ -317,14 +315,12 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
     #[account(
-		init,
+        init,
         seeds = [ROUTER_PDA_SEEDS.as_ref()],
-        // bump = bump_seed,
         bump,
-		space = 8 + 32 + 1 + 32 + 1,
-		payer = initializer,
-        
-	)]
+        space = 8 + 32 + 1 + 32 + 1,
+        payer = initializer,
+    )]
     pub router_account: Account<'info, RouterAccount>,
     /// CHECK: `mpc` is the authority account to manage `router_account`
     pub mpc: AccountInfo<'info>,
@@ -438,6 +434,14 @@ pub struct ChangeMPC<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ApplyMPC<'info> {
+    #[account(mut)]
+    pub signer: Signer<'info>,
+    #[account(mut, owner = *program_id)]
+    pub router_account: Account<'info, RouterAccount>,
+}
+
+#[derive(Accounts)]
 pub struct SkimLamports<'info> {
     #[account(mut)]
     pub mpc: Signer<'info>,
@@ -447,7 +451,7 @@ pub struct SkimLamports<'info> {
 }
 
 #[derive(Accounts)]
-pub struct EnableSwapTrade<'info> {
+pub struct SetPaused<'info> {
     #[account(mut)]
     pub mpc: Signer<'info>,
     #[account(mut, owner = *program_id, has_one = mpc @RouterError::OnlyMPC)]

@@ -1,5 +1,5 @@
 [programs.localnet]
-router = "BCNbjzvjVMh1frrB33VVfvCAGF611cswYjvo3zsdMNLq"
+router = "5VdF7WLTrgxAS3cvKgsKZjeotmE6gStfikhkxp9fiYdR"
 # router = "xHYaTHecBATkMWMg2MVt5hcwQExHZhNpHFP1Zh5mZRb"
 
 [registry]
@@ -12,3 +12,6 @@ wallet = "~/.config/solana/id.json"
 [scripts]
 # test = "mocha -t 1000000 tests/"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/"
+
+[test]
+startup_wait = 100000

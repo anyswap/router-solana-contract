@@ -17,7 +17,7 @@ var printTx = async (tx) => {
 
 describe("router", () => {
   /* create and set a Provider */
-  //const provider = anchor.Provider.local("http://localhost:8899", {"commitment":"finalized"});
+  //const provider = anchor.AnchorProvider.local("http://localhost:8899", {"commitment":"finalized"});
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.Router;
@@ -28,9 +28,6 @@ describe("router", () => {
 
   const mywallet = provider.wallet;
   console.log("my wallet is", mywallet.publicKey.toString());
-
-  const mpc = new PublicKey("CwsNP2KQw7KgZBcnTE6fabNAMipQe1XTS9vCNecyrdES")
-  console.log("mpc address is", mpc.toString());
 
   let _routerAccount, _bump;
   PublicKey.findProgramAddress([Buffer.from('Router')], programId)
@@ -54,11 +51,6 @@ describe("router", () => {
       await connection.requestAirdrop(_routerAccount, 100 * LAMPORTS_PER_SOL),
       "confirmed"
     );
-    // Airdropping tokens to mpc.
-    await connection.confirmTransaction(
-      await connection.requestAirdrop(mpc, 100 * LAMPORTS_PER_SOL),
-      "confirmed"
-    );
 
     let balance;
     balance = await connection.getBalance(_tempAccount.publicKey);
@@ -69,9 +61,6 @@ describe("router", () => {
 
     balance = await connection.getBalance(mywallet.publicKey);
     console.log("mywallet account balance is", balance);
-
-    balance = await connection.getBalance(mpc);
-    console.log("mpc account balance is", balance);
   });
 
   it('Is initialized!', async () => {
@@ -105,13 +94,21 @@ describe("router", () => {
     console.log("change mpc tx is", tx);
     await printTx(tx);
 
-    tx = await program.rpc.applyMpc(mywallet.publicKey, {
+    /* Fetch the account and check the value of count */
+    const account = await program.account.routerAccount.fetch(_routerAccount);
+    console.log('pda mpc key: ', account.mpc.toString());
+    assert.ok(account.mpc.equals(_tempAccount.publicKey));
+    console.log('pda pending mpc key: ', account.pendingMpc.toString());
+    assert.ok(account.pendingMpc.equals(mywallet.publicKey));
+  })
+
+  it('Apply MPC!', async () => {
+    tx = await program.rpc.applyMpc({
       accounts: {
-        mpc: _tempAccount.publicKey,
+        signer: mywallet.publicKey,
         routerAccount: _routerAccount,
-        newMpc: mywallet.publicKey,
       },
-      signers: [_tempAccount],
+      signers: [mywallet.payer],
     });
     console.log("apply mpc tx is", tx);
     await printTx(tx);
@@ -120,29 +117,39 @@ describe("router", () => {
     const account = await program.account.routerAccount.fetch(_routerAccount);
     console.log('pda mpc key: ', account.mpc.toString());
     assert.ok(account.mpc.equals(mywallet.publicKey));
+    console.log('pda pending mpc key: ', account.pendingMpc.toString());
+    assert.ok(account.pendingMpc.equals(PublicKey.default));
   });
 
-  it('ENABLE SWAP TRADE!', async () => {
-    let tx = await program.rpc.enableSwapTrade(false, {
+  it('Set Paused!', async () => {
+    let tx = await program.rpc.setPaused(true, {
       accounts: {
         mpc: mywallet.publicKey,
         routerAccount: _routerAccount,
       },
       signers: [mywallet.payer],
     });
-    console.log("disable_swap_trade tx is", tx);
+    console.log("set paused to true tx is", tx);
     await printTx(tx);
 
+    let account = await program.account.routerAccount.fetch(_routerAccount);
+    console.log('paused flag is: ', account.paused);
+    assert.ok(account.paused);
 
-    tx = await program.rpc.enableSwapTrade(true, {
+
+    tx = await program.rpc.setPaused(false, {
       accounts: {
         mpc: mywallet.publicKey,
         routerAccount: _routerAccount,
       },
       signers: [mywallet.payer],
     });
-    console.log("enable_swap_trade tx is", tx);
+    console.log("set paused to false tx is", tx);
     await printTx(tx);
+
+    account = await program.account.routerAccount.fetch(_routerAccount);
+    console.log('paused flag is: ', account.paused);
+    assert.ok(!account.paused);
   });
 
   it('Skim lamports!', async () => {
@@ -435,16 +442,16 @@ describe("router", () => {
     assert.ok(balance == prebalance + LAMPORTS_PER_SOL);
   });
 
-  it('DisableSwap!', async () => {
-    let tx = await program.rpc.enableSwapTrade(
-      false, {
+  it('Test Pause!', async () => {
+    let tx = await program.rpc.setPaused(
+      true, {
       accounts: {
         mpc: mywallet.publicKey,
         routerAccount: _routerAccount,
       },
       signers: [mywallet.payer],
     });
-    console.log("enableSwapTrade tx is", tx);
+    console.log("setPaused tx is", tx);
     await printTx(tx);
 
     let bindAddr = "0xdce8e16a5b685b7713436b4adf4ffd66bd0387d8";
@@ -466,16 +473,16 @@ describe("router", () => {
     });
   });
 
-  it('EnableSwap!', async () => {
-    let tx = await program.rpc.enableSwapTrade(
-      true, {
+  it('Test Unpause!', async () => {
+    let tx = await program.rpc.setPaused(
+      false, {
       accounts: {
         mpc: mywallet.publicKey,
         routerAccount: _routerAccount,
       },
       signers: [mywallet.payer],
     });
-    console.log("enableSwapTrade tx is", tx);
+    console.log("setPaused tx is", tx);
     await printTx(tx);
 
     let bindAddr = "0xdce8e16a5b685b7713436b4adf4ffd66bd0387d8";
@@ -496,11 +503,12 @@ describe("router", () => {
   });
 
   it('Change MPC again!', async () => {
-    const tx = await program.rpc.changeMpc(mpc, {
+    const tx = await program.rpc.changeMpc(
+      _tempAccount.publicKey, {
       accounts: {
         mpc: mywallet.publicKey,
         routerAccount: _routerAccount,
-        newMpc: mpc,
+        newMpc: _tempAccount.publicKey,
       },
       signers: [mywallet.payer],
     });
@@ -510,7 +518,28 @@ describe("router", () => {
     /* Fetch the account and check the value of count */
     const account = await program.account.routerAccount.fetch(_routerAccount);
     console.log('pda mpc key: ', account.mpc.toString());
-    assert.ok(account.mpc.equals(mpc));
+    assert.ok(account.mpc.equals(mywallet.publicKey));
+    console.log('pda pending mpc key: ', account.pendingMpc.toString());
+    assert.ok(account.pendingMpc.equals(_tempAccount.publicKey));
+  })
+
+  it('Apply MPC again!', async () => {
+    tx = await program.rpc.applyMpc({
+      accounts: {
+        signer: _tempAccount.publicKey,
+        routerAccount: _routerAccount,
+      },
+      signers: [_tempAccount],
+    });
+    console.log("apply mpc again tx is", tx);
+    await printTx(tx);
+
+    /* Fetch the account and check the value of count */
+    const account = await program.account.routerAccount.fetch(_routerAccount);
+    console.log('pda mpc key: ', account.mpc.toString());
+    assert.ok(account.mpc.equals(_tempAccount.publicKey));
+    console.log('pda pending mpc key: ', account.pendingMpc.toString());
+    assert.ok(account.pendingMpc.equals(PublicKey.default));
   });
 
 });
